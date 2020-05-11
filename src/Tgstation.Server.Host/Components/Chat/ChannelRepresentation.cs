@@ -29,7 +29,7 @@ namespace Tgstation.Server.Host.Components.Chat
 		/// <summary>
 		/// The user friendly name of the <see cref="ChannelRepresentation"/>
 		/// </summary>
-		public string FriendlyName { get; set; }
+		public string? FriendlyName { get; set; }
 
 		/// <summary>
 		/// The name of the connection the <see cref="ChannelRepresentation"/> belongs to

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Tgstation.Server.Api.Models;
@@ -13,17 +14,10 @@ namespace Tgstation.Server.Host.Components.Repository
 		/// <summary>
 		/// If the <see cref="IRepository"/> was cloned from GitHub.com
 		/// </summary>
-		bool IsGitHubRepository { get; }
-
-		/// <summary>
-		/// The <see cref="Octokit.Repository.Owner"/> if this <see cref="IsGitHubRepository"/>
-		/// </summary>
-		string GitHubOwner { get; }
-
-		/// <summary>
-		/// The <see cref="Octokit.Repository.Name"/> if this <see cref="IsGitHubRepository"/>
-		/// </summary>
-		string GitHubRepoName { get; }
+		/// <param name="owner">The repository owner.</param>
+		/// <param name="name">The repository name.</param>
+		/// <returns><see langword="true"/> if the <see cref="IRepository"/> was cloned from GitHub.com, <see langword="false"/> otherwise.</returns>
+		bool IsGitHubRepository([NotNullWhen(true)]out string owner, [NotNullWhen(true)]out string name);
 
 		/// <summary>
 		/// If <see cref="Reference"/> tracks an upstream branch

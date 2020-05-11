@@ -94,17 +94,17 @@ namespace Tgstation.Server.Host.Components.Chat
 		/// <summary>
 		/// The <see cref="ICustomCommandHandler"/> for the <see cref="ChangeChannels(long, IEnumerable{Api.Models.ChatChannel}, CancellationToken)"/>
 		/// </summary>
-		ICustomCommandHandler customCommandHandler;
+		ICustomCommandHandler? customCommandHandler;
 
 		/// <summary>
 		/// The <see cref="Task"/> that monitors incoming chat messages
 		/// </summary>
-		Task chatHandler;
+		Task? chatHandler;
 
 		/// <summary>
 		/// The <see cref="TaskCompletionSource{TResult}"/> that completes when <see cref="ChatBot"/>s change
 		/// </summary>
-		TaskCompletionSource<object> connectionsUpdated;
+		TaskCompletionSource<object?> connectionsUpdated;
 
 		/// <summary>
 		/// Used for remapping <see cref="ChannelRepresentation.RealId"/>s
@@ -148,7 +148,7 @@ namespace Tgstation.Server.Host.Components.Chat
 			mappedChannels = new Dictionary<ulong, ChannelMapping>();
 			trackingContexts = new List<IChatTrackingContext>();
 			handlerCts = new CancellationTokenSource();
-			connectionsUpdated = new TaskCompletionSource<object>();
+			connectionsUpdated = new TaskCompletionSource<object?>();
 			channelIdCounter = 1;
 		}
 
@@ -168,9 +168,9 @@ namespace Tgstation.Server.Host.Components.Chat
 		/// <param name="updateTrackings">If <see cref="trackingContexts"/> should be update</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> for the operation.</param>
 		/// <returns>A <see cref="Task{TResult}"/> resulting in the <see cref="IProvider"/> being removed if it exists, <see langword="null"/> otherwise.</returns>
-		async Task<IProvider> RemoveProvider(long connectionId, bool updateTrackings, CancellationToken cancellationToken)
+		async Task<IProvider?> RemoveProvider(long connectionId, bool updateTrackings, CancellationToken cancellationToken)
 		{
-			IProvider provider;
+			IProvider? provider;
 			lock (providers)
 				if (!providers.TryGetValue(connectionId, out provider))
 					return null;
@@ -209,7 +209,7 @@ namespace Tgstation.Server.Host.Components.Chat
 			// provider reconnected, remap channels.
 			if (message == null)
 			{
-				IEnumerable<Api.Models.ChatChannel> channelsToMap;
+				IEnumerable<Api.Models.ChatChannel>? channelsToMap;
 				lock (activeChatBots)
 					channelsToMap = activeChatBots.FirstOrDefault()?.Channels;
 
@@ -468,7 +468,7 @@ namespace Tgstation.Server.Host.Components.Chat
 			lock (mappedChannels)
 			{
 				lock (providers)
-					if (!providers.TryGetValue(connectionId, out IProvider verify) || verify != provider) // aborted again
+					if (!providers.TryGetValue(connectionId, out IProvider? verify) || verify != provider) // aborted again
 						return;
 				foreach (var I in mappings)
 				{
@@ -494,7 +494,6 @@ namespace Tgstation.Server.Host.Components.Chat
 		{
 			if (newSettings == null)
 				throw new ArgumentNullException(nameof(newSettings));
-			IProvider provider;
 
 			async Task DisconnectProvider(IProvider p)
 			{
@@ -509,6 +508,7 @@ namespace Tgstation.Server.Host.Components.Chat
 			}
 
 			Task disconnectTask;
+			IProvider? provider;
 			lock (providers)
 			{
 				// raw settings changes forces a rebuild of the provider

@@ -48,7 +48,7 @@ namespace Tgstation.Server.Host.System
 		/// <summary>
 		/// The <see cref="Task"/> representing the lifetime of the <see cref="WindowsNetworkPromptReaper"/>
 		/// </summary>
-		Task runTask;
+		Task? runTask;
 
 		static bool EnumWindow(IntPtr hWnd, IntPtr lParam)
 		{
@@ -180,7 +180,10 @@ namespace Tgstation.Server.Host.System
 		{
 			logger.LogTrace("Stopping network prompt reaper...");
 			cancellationTokenSource.Cancel();
+			if (runTask == null)
+				throw new InvalidOperationException("StartAsync wasn't called!");
 			await runTask.ConfigureAwait(false);
+			runTask = null;
 			registeredProcesses.Clear();
 		}
 

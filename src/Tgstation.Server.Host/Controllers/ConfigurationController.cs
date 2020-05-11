@@ -53,7 +53,7 @@ namespace Tgstation.Server.Host.Controllers
 		/// <param name="path">The path to validate if any</param>
 		/// <param name="systemIdentityToUse">The <see cref="ISystemIdentity"/> to use when calling into <see cref="Components.StaticFiles.IConfiguration"/></param>
 		/// <returns><see langword="true"/> if a <see cref="ForbidResult"/> should be returned, <see langword="false"/> otherwise</returns>
-		bool ForbidDueToModeConflicts(string path, out ISystemIdentity systemIdentityToUse)
+		bool ForbidDueToModeConflicts(string? path, out ISystemIdentity? systemIdentityToUse)
 		{
 			if (Instance.ConfigurationType == ConfigurationType.Disallowed
 				|| (Instance.ConfigurationType == ConfigurationType.SystemIdentityWrite && AuthenticationContext.SystemIdentity == null)
@@ -163,7 +163,7 @@ namespace Tgstation.Server.Host.Controllers
 		[TgsAuthorize(ConfigurationRights.List)]
 		[ProducesResponseType(typeof(IReadOnlyList<ConfigurationFile>), 200)]
 		[ProducesResponseType(410)]
-		public async Task<IActionResult> Directory(string directoryPath, CancellationToken cancellationToken)
+		public async Task<IActionResult> Directory(string? directoryPath, CancellationToken cancellationToken)
 		{
 			if (ForbidDueToModeConflicts(directoryPath, out var systemIdentity))
 				return Forbid();

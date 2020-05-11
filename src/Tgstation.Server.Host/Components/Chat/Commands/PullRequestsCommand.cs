@@ -65,7 +65,7 @@ namespace Tgstation.Server.Host.Components.Chat.Commands
 		#pragma warning disable CA1506
 		public async Task<string> Invoke(string arguments, ChatUser user, CancellationToken cancellationToken)
 		{
-			IEnumerable<Models.TestMerge> results = null;
+			IEnumerable<Models.TestMerge> results;
 			if (arguments.Split(' ').Any(x => x.ToUpperInvariant() == "--REPO"))
 			{
 				string head;
@@ -76,14 +76,20 @@ namespace Tgstation.Server.Host.Components.Chat.Commands
 					head = repo.Head;
 				}
 
-				await databaseContextFactory.UseContext(async db => results = await db.RevisionInformations.Where(x => x.Instance.Id == instance.Id && x.CommitSha == head)
-				.SelectMany(x => x.ActiveTestMerges)
-				.Select(x => x.TestMerge)
-				.Select(x => new Models.TestMerge
-				{
-					Number = x.Number,
-					PullRequestRevision = x.PullRequestRevision
-				}).ToListAsync(cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
+				IEnumerable<Models.TestMerge>? dbResults = null;
+				await databaseContextFactory.UseContext(
+					async db => dbResults = await db.RevisionInformations.Where(x => x.Instance.Id == instance.Id && x.CommitSha == head)
+						.SelectMany(x => x.ActiveTestMerges)
+						.Select(x => x.TestMerge)
+						.Select(x => new Models.TestMerge
+						{
+							Number = x.Number,
+							PullRequestRevision = x.PullRequestRevision
+						})
+						.ToListAsync(cancellationToken)
+						.ConfigureAwait(false))
+					.ConfigureAwait(false);
+				results = dbResults!;
 			}
 			else
 			{

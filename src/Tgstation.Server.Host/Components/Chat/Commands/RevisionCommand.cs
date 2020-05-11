@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,7 +52,7 @@ namespace Tgstation.Server.Host.Components.Chat.Commands
 		/// <inheritdoc />
 		public async Task<string> Invoke(string arguments, ChatUser user, CancellationToken cancellationToken)
 		{
-			string result;
+			string? result;
 			if (arguments.Split(' ').Any(x => x.ToUpperInvariant() == "--REPO"))
 				using (var repo = await repositoryManager.LoadRepository(cancellationToken).ConfigureAwait(false))
 				{
@@ -68,7 +67,7 @@ namespace Tgstation.Server.Host.Components.Chat.Commands
 				result = watchdog.ActiveCompileJob?.RevisionInformation.CommitSha;
 			}
 
-			return String.Format(CultureInfo.InvariantCulture, "^{0}", result);
+			return result != null ? "^{0}" : "None!";
 		}
 	}
 }

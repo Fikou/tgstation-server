@@ -45,7 +45,7 @@ namespace Tgstation.Server.Host.Components.StaticFiles
 		/// <param name="configurationRelativePath">The relative path in the Configuration directory</param>
 		/// <param name="systemIdentity">The <see cref="ISystemIdentity"/> for the operation. If <see langword="null"/>, the operation will be performed as the user of the <see cref="Core.Application"/></param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> for the operation</param>
-		/// <returns>A <see cref="Task{TResult}"/> resulting in the <see cref="Api.Models.ConfigurationFile"/> of the file</returns>
+		/// <returns>A <see cref="Task{TResult}"/> resulting in the <see cref="ConfigurationFile"/> of the file</returns>
 		Task<ConfigurationFile> Read(string configurationRelativePath, ISystemIdentity systemIdentity, CancellationToken cancellationToken);
 
 		/// <summary>
@@ -75,6 +75,6 @@ namespace Tgstation.Server.Host.Components.StaticFiles
 		/// <param name="previousHash">The hash any existing file must match in order for the write to succeed</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> for the operation. Usage may result in partial writes</param>
 		/// <returns>A <see cref="Task{TResult}"/> resulting in the updated <see cref="ConfigurationFile"/> or <see langword="null"/> if the write failed due to <see cref="ConfigurationFile.LastReadHash"/> conflicts</returns>
-		Task<ConfigurationFile> Write(string configurationRelativePath, ISystemIdentity systemIdentity, byte[] data, string previousHash, CancellationToken cancellationToken);
+		Task<ConfigurationFile> Write(string configurationRelativePath, ISystemIdentity? systemIdentity, byte[] data, string previousHash, CancellationToken cancellationToken);
 	}
 }

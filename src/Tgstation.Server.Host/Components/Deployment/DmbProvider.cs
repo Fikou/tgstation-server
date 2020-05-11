@@ -29,7 +29,7 @@ namespace Tgstation.Server.Host.Components.Deployment
 		/// <summary>
 		/// The <see cref="Action"/> to run when <see cref="Dispose"/> is called
 		/// </summary>
-		Action onDispose;
+		Action? onDispose;
 
 		/// <summary>
 		/// Construct a <see cref="DmbProvider"/>

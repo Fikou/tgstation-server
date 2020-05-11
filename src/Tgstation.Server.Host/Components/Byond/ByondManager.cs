@@ -43,7 +43,7 @@ namespace Tgstation.Server.Host.Components.Byond
 		const string ActiveVersionFileName = "ActiveVersion.txt";
 
 		/// <inheritdoc />
-		public Version ActiveVersion { get; private set; }
+		public Version? ActiveVersion { get; private set; }
 
 		/// <inheritdoc />
 		public IReadOnlyList<Version> InstalledVersions
@@ -121,7 +121,7 @@ namespace Tgstation.Server.Host.Components.Byond
 		/// <returns>A <see cref="Task"/> representing the running operation</returns>
 		async Task InstallVersion(Version version, CancellationToken cancellationToken)
 		{
-			var ourTcs = new TaskCompletionSource<object>();
+			var ourTcs = new TaskCompletionSource<object?>();
 			Task inProgressTask;
 
 			var versionKey = VersionKey(version);

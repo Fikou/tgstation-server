@@ -140,7 +140,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 
 				Logger.LogTrace("Started.");
 
-				var channelsAvailable = new TaskCompletionSource<object>();
+				var channelsAvailable = new TaskCompletionSource<object?>();
 				client.Ready += () =>
 				{
 					channelsAvailable.TrySetResult(null);
@@ -203,7 +203,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 				return Task.FromResult<IReadOnlyCollection<ChannelRepresentation>>(Array.Empty<ChannelRepresentation>());
 			}
 
-			ChannelRepresentation GetModelChannelFromDBChannel(Api.Models.ChatChannel channelFromDB)
+			ChannelRepresentation? GetModelChannelFromDBChannel(Api.Models.ChatChannel channelFromDB)
 			{
 				if (!channelFromDB.DiscordChannelId.HasValue)
 					throw new InvalidOperationException("ChatChannel missing DiscordChannelId!");
@@ -229,7 +229,10 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 				return null;
 			}
 
-			var enumerator = channels.Select(x => GetModelChannelFromDBChannel(x)).Where(x => x != null).ToList();
+			var enumerator = channels.Select(x => GetModelChannelFromDBChannel(x))
+				.Where(x => x != null)
+				.Select(x => x!)
+				.ToList();
 
 			lock (client)
 			{

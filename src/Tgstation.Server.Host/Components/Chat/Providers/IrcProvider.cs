@@ -55,7 +55,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 		/// <summary>
 		/// Password which will used for authentication
 		/// </summary>
-		readonly string password;
+		readonly string? password;
 
 		/// <summary>
 		/// The <see cref="IrcPasswordType"/> of <see cref="password"/>
@@ -65,22 +65,22 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 		/// <summary>
 		/// Map of <see cref="ChannelRepresentation.RealId"/>s to channel names
 		/// </summary>
-		readonly Dictionary<ulong, string> channelIdMap;
+		readonly Dictionary<ulong, string?> channelIdMap;
 
 		/// <summary>
 		/// Map of <see cref="ChannelRepresentation.RealId"/>s to query users
 		/// </summary>
-		readonly Dictionary<ulong, string> queryChannelIdMap;
+		readonly Dictionary<ulong, string?> queryChannelIdMap;
+
+		/// <summary>
+		/// The <see cref="Task"/> used for <see cref="IrcConnection.Listen(bool)"/>
+		/// </summary>
+		Task? listenTask;
 
 		/// <summary>
 		/// Id counter for <see cref="channelIdMap"/>
 		/// </summary>
 		ulong channelIdCounter;
-
-		/// <summary>
-		/// The <see cref="Task"/> used for <see cref="IrcConnection.Listen(bool)"/>
-		/// </summary>
-		Task listenTask;
 
 		/// <summary>
 		/// If we are disconnecting
@@ -151,8 +151,8 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 			client.OnChannelMessage += Client_OnChannelMessage;
 			client.OnQueryMessage += Client_OnQueryMessage;
 
-			channelIdMap = new Dictionary<ulong, string>();
-			queryChannelIdMap = new Dictionary<ulong, string>();
+			channelIdMap = new Dictionary<ulong, string?>();
+			queryChannelIdMap = new Dictionary<ulong, string?>();
 			channelIdCounter = 1;
 			disconnecting = false;
 		}
@@ -182,7 +182,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 			var username = e.Data.Nick;
 			var channelName = isPrivate ? username : e.Data.Channel;
 
-			ulong MapAndGetChannelId(Dictionary<ulong, string> dicToCheck)
+			ulong MapAndGetChannelId(Dictionary<ulong, string?> dicToCheck)
 			{
 				ulong? resultId = null;
 				if (!dicToCheck.Any(x =>
@@ -199,7 +199,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 						channelIdMap.Add(resultId.Value, null);
 				}
 
-				return resultId.Value;
+				return resultId!.Value;
 			}
 
 			ulong userId, channelId;
@@ -364,7 +364,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 					}
 				}, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current).ConfigureAwait(false);
 				Dispose();
-				await listenTask.ConfigureAwait(false);
+				await listenTask!.ConfigureAwait(false);
 			}
 			catch (OperationCanceledException)
 			{

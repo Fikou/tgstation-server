@@ -73,7 +73,7 @@ namespace Tgstation.Server.Host.Components.Deployment
 		/// <summary>
 		/// The latest <see cref="DmbProvider"/>
 		/// </summary>
-		IDmbProvider nextDmbProvider;
+		IDmbProvider? nextDmbProvider;
 
 		/// <summary>
 		/// Construct a <see cref="DmbFactory"/>
@@ -106,7 +106,7 @@ namespace Tgstation.Server.Host.Components.Deployment
 		{
 			async Task HandleCleanup()
 			{
-				var deleteJob = ioManager.DeleteDirectory(job.DirectoryName.ToString(), cleanupCts.Token);
+				var deleteJob = ioManager.DeleteDirectory(job.DirectoryName!.Value.ToString(), cleanupCts.Token);
 				Task otherTask;
 
 				// lock (this) //already locked below
@@ -149,12 +149,12 @@ namespace Tgstation.Server.Host.Components.Deployment
 		/// <inheritdoc />
 		public IDmbProvider LockNextDmb(int lockCount)
 		{
-			if (!DmbAvailable)
-				throw new InvalidOperationException("No .dmb available!");
 			if (lockCount < 0)
 				throw new ArgumentOutOfRangeException(nameof(lockCount), lockCount, "lockCount must be greater than or equal to 0!");
 			lock (jobLockCounts)
 			{
+				if (nextDmbProvider == null)
+					throw new InvalidOperationException("No .dmb available!");
 				var jobId = nextDmbProvider.CompileJob.Id;
 				var incremented = jobLockCounts[jobId] += lockCount;
 				logger.LogTrace("Compile job {0} lock count now: {1}", jobId, incremented);
@@ -165,7 +165,7 @@ namespace Tgstation.Server.Host.Components.Deployment
 		/// <inheritdoc />
 		public async Task StartAsync(CancellationToken cancellationToken)
 		{
-			CompileJob cj = null;
+			CompileJob? cj = null;
 			await databaseContextFactory.UseContext(async (db) =>
 			{
 				cj = await db
@@ -190,7 +190,7 @@ namespace Tgstation.Server.Host.Components.Deployment
 
 		/// <inheritdoc />
 		#pragma warning disable CA1506 // TODO: Decomplexify
-		public async Task<IDmbProvider> FromCompileJob(CompileJob compileJob, CancellationToken cancellationToken)
+		public async Task<IDmbProvider?> FromCompileJob(CompileJob compileJob, CancellationToken cancellationToken)
 		{
 			if (compileJob == null)
 				throw new ArgumentNullException(nameof(compileJob));
@@ -258,14 +258,20 @@ namespace Tgstation.Server.Host.Components.Deployment
 			List<string> jobUidsToNotErase = null;
 
 			// find the uids of locked directories
-			await databaseContextFactory.UseContext(async db =>
-			{
-				jobUidsToNotErase = await db.CompileJobs.Where(x => x.Job.Instance.Id == instance.Id && jobIdsToSkip.Contains(x.Id)).Select(x => x.DirectoryName.Value.ToString().ToUpperInvariant()).ToListAsync(cancellationToken).ConfigureAwait(false);
-			}).ConfigureAwait(false);
+			await databaseContextFactory.UseContext(
+				async db =>
+				{
+					jobUidsToNotErase = await db.CompileJobs
+					.Where(x => x.Job.Instance.Id == instance.Id && jobIdsToSkip.Contains(x.Id))
+					.Select(x => x.DirectoryName.Value.ToString().ToUpperInvariant())
+					.ToListAsync(cancellationToken)
+					.ConfigureAwait(false);
+				})
+				.ConfigureAwait(false);
 
 			// add the other exemption
 			if (exceptThisOne != null)
-				jobUidsToNotErase.Add(exceptThisOne.DirectoryName.Value.ToString().ToUpperInvariant());
+				jobUidsToNotErase!.Add(exceptThisOne.DirectoryName.Value.ToString().ToUpperInvariant());
 
 			// cleanup
 			var gameDirectory = ioManager.ResolvePath();

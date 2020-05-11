@@ -6,20 +6,20 @@
     <DebugType>Full</DebugType>
     <Version>$(TgsCoreVersion)</Version>
     <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
     <CodeAnalysisRuleSet>../../build/analyzers.ruleset</CodeAnalysisRuleSet>
     <IsPackable>false</IsPackable>
     <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+    <NoWarn>API1000;API1001</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <DocumentationFile>bin\Release\netcoreapp2.1\Tgstation.Server.Host.xml</DocumentationFile>
-    <NoWarn>API1000</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <NoWarn>API1000</NoWarn>
     <DocumentationFile>bin\Debug\netcoreapp2.1\Tgstation.Server.Host.xml</DocumentationFile>
   </PropertyGroup>
   

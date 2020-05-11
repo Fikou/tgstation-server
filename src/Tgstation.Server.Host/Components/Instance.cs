@@ -93,12 +93,12 @@ namespace Tgstation.Server.Host.Components
 		/// <summary>
 		/// The auto update <see cref="Task"/>
 		/// </summary>
-		Task timerTask;
+		Task? timerTask;
 
 		/// <summary>
 		/// <see cref="CancellationTokenSource"/> for <see cref="timerTask"/>
 		/// </summary>
-		CancellationTokenSource timerCts;
+		CancellationTokenSource? timerCts;
 
 		/// <summary>
 		/// Construct an <see cref="Instance"/>
@@ -200,9 +200,9 @@ namespace Tgstation.Server.Host.Components
 			if (dreamMakerSettings == default)
 				throw new JobException(Api.Models.ErrorCode.InstanceMissingDreamMakerSettings);
 
-			RepositorySettings repositorySettings = null;
-			string repoOwner = null;
-			string repoName = null;
+			RepositorySettings? repositorySettings = null;
+			string? repoOwner = null;
+			string? repoName = null;
 			CompileJob compileJob;
 			RevisionInformation revInfo;
 			using (var repo = await RepositoryManager.LoadRepository(cancellationToken).ConfigureAwait(false))
@@ -253,18 +253,19 @@ namespace Tgstation.Server.Host.Components
 				{
 					var totalSpan = TimeSpan.Zero;
 					foreach (var I in previousCompileJobs)
-						totalSpan += I.StoppedAt.Value - I.StartedAt.Value;
+						totalSpan += I.StoppedAt!.Value - I.StartedAt!.Value;
 					averageSpan = totalSpan / previousCompileJobs.Count;
 				}
 
-				compileJob = await dreamMaker.Compile(revInfo, dreamMakerSettings, ddSettings.StartupTimeout.Value, repo, progressReporter, averageSpan, cancellationToken).ConfigureAwait(false);
+				compileJob = await dreamMaker.Compile(revInfo, dreamMakerSettings, ddSettings.StartupTimeout!.Value, repo, progressReporter, averageSpan, cancellationToken).ConfigureAwait(false);
 			}
 
 			compileJob.Job = job;
 
 			databaseContext.CompileJobs.Add(compileJob);
 
-			await PostDeploymentComments(compileJob, repositorySettings, repoOwner, repoName).ConfigureAwait(false);
+			if (repositorySettings?.AccessToken != null)
+				await PostDeploymentComments(compileJob, repositorySettings, repoOwner, repoName).ConfigureAwait(false);
 
 			// The difficulty with compile jobs is they have a two part commit
 			await databaseContext.Save(cancellationToken).ConfigureAwait(false);
@@ -297,9 +298,6 @@ namespace Tgstation.Server.Host.Components
 			string repoOwner,
 			string repoName)
 		{
-			if (repositorySettings?.AccessToken == null)
-				return;
-
 			// potential for commenting on a test merge change
 			var outgoingCompileJob = LatestCompileJob();
 
@@ -394,7 +392,7 @@ namespace Tgstation.Server.Host.Components
 					await eventConsumer.HandleEvent(EventType.InstanceAutoUpdateStart, new List<string>(), cancellationToken).ConfigureAwait(false);
 					try
 					{
-						Models.User user = null;
+						Models.User? user = null;
 						await databaseContextFactory.UseContext(
 							async (db) => user = await db
 								.Users
@@ -411,10 +409,10 @@ namespace Tgstation.Server.Host.Components
 							Description = "Scheduled repository update",
 							CancelRightsType = RightsType.Repository,
 							CancelRight = (ulong)RepositoryRights.CancelPendingChanges,
-							StartedBy = user
+							StartedBy = user!
 						};
 
-						string deploySha = null;
+						string? deploySha = null;
 						await jobManager.RegisterOperation(repositoryUpdateJob, async (paramJob, databaseContext, progressReporter, jobCancellationToken) =>
 						{
 							var repositorySettingsTask = databaseContext.RepositorySettings.Where(x => x.InstanceId == metadata.Id).FirstAsync(jobCancellationToken);
@@ -453,7 +451,7 @@ namespace Tgstation.Server.Host.Components
 							// the main point of auto update is to pull the remote
 							await repo.FetchOrigin(repositorySettings.AccessUser, repositorySettings.AccessToken, NextProgressReporter(), jobCancellationToken).ConfigureAwait(false);
 
-							RevisionInformation currentRevInfo = null;
+							RevisionInformation? currentRevInfo = null;
 							bool hasDbChanges = false;
 
 							Task<RevisionInformation> LoadRevInfo() => databaseContext.RevisionInformations
@@ -493,7 +491,7 @@ namespace Tgstation.Server.Host.Components
 
 							// take appropriate auto update actions
 							bool shouldSyncTracked;
-							if (repositorySettings.AutoUpdatesKeepTestMerges.Value)
+							if (repositorySettings.AutoUpdatesKeepTestMerges!.Value)
 							{
 								logger.LogTrace("Preserving test merges...");
 

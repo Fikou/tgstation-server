@@ -17,7 +17,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 		/// <summary>
 		/// <see cref="Queue{T}"/> of received <see cref="Message"/>s
 		/// </summary>
-		readonly Queue<Message> messageQueue;
+		readonly Queue<Message?> messageQueue;
 
 		/// <summary>
 		/// Used for synchronizing access to <see cref="reconnectCts"/> and <see cref="reconnectTask"/>.
@@ -27,17 +27,17 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 		/// <summary>
 		/// <see cref="TaskCompletionSource{TResult}"/> that completes while <see cref="messageQueue"/> isn't empty
 		/// </summary>
-		TaskCompletionSource<object> nextMessage;
+		TaskCompletionSource<object?> nextMessage;
 
 		/// <summary>
 		/// The auto reconnect <see cref="Task"/>
 		/// </summary>
-		Task reconnectTask;
+		Task? reconnectTask;
 
 		/// <summary>
 		/// <see cref="CancellationTokenSource"/> for <see cref="reconnectTask"/>
 		/// </summary>
-		CancellationTokenSource reconnectCts;
+		CancellationTokenSource? reconnectCts;
 
 		/// <summary>
 		/// Construct a <see cref="Provider"/>
@@ -48,8 +48,8 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 		{
 			Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-			messageQueue = new Queue<Message>();
-			nextMessage = new TaskCompletionSource<object>();
+			messageQueue = new Queue<Message?>();
+			nextMessage = new TaskCompletionSource<object?>();
 
 			reconnectTaskLock = new object();
 
@@ -67,7 +67,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 		/// Queues a <paramref name="message"/> for <see cref="NextMessage(CancellationToken)"/>
 		/// </summary>
 		/// <param name="message">The <see cref="Message"/> to queue</param>
-		protected void EnqueueMessage(Message message)
+		protected void EnqueueMessage(Message? message)
 		{
 			lock (messageQueue)
 			{
@@ -93,9 +93,9 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 		public abstract Task<IReadOnlyCollection<ChannelRepresentation>> MapChannels(IEnumerable<Api.Models.ChatChannel> channels, CancellationToken cancellationToken);
 
 		/// <inheritdoc />
-		public async Task<Message> NextMessage(CancellationToken cancellationToken)
+		public async Task<Message?> NextMessage(CancellationToken cancellationToken)
 		{
-			var cancelTcs = new TaskCompletionSource<object>();
+			var cancelTcs = new TaskCompletionSource<object?>();
 			using (cancellationToken.Register(() => cancelTcs.SetCanceled()))
 				await Task.WhenAny(nextMessage.Task, cancelTcs.Task).ConfigureAwait(false);
 			cancellationToken.ThrowIfCancellationRequested();
@@ -103,7 +103,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 			{
 				var result = messageQueue.Dequeue();
 				if (messageQueue.Count == 0)
-					nextMessage = new TaskCompletionSource<object>();
+					nextMessage = new TaskCompletionSource<object?>();
 				return result;
 			}
 		}
@@ -120,7 +120,7 @@ namespace Tgstation.Server.Host.Components.Chat.Providers
 					reconnectCts.Cancel();
 					reconnectCts.Dispose();
 					reconnectCts = null;
-					Task reconnectTask = this.reconnectTask;
+					Task reconnectTask = this.reconnectTask!;
 					this.reconnectTask = null;
 					return reconnectTask;
 				}
