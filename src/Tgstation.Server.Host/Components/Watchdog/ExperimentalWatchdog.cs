@@ -401,7 +401,6 @@ namespace Tgstation.Server.Host.Components.Watchdog
 			alphaServer = null;
 			bravoServer?.Dispose();
 			bravoServer = null;
-			Running = false;
 		}
 
 		/// <inheritdoc />

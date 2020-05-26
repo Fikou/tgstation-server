@@ -30,7 +30,7 @@ namespace Tgstation.Server.Host.Components.Watchdog
 		public bool Running
 		{
 			get => running;
-			set
+			private set
 			{
 				running = value;
 				Logger.LogTrace("Running set to {0}", running);
@@ -324,7 +324,7 @@ namespace Tgstation.Server.Host.Components.Watchdog
 		/// <param name="announce">If the launch should be announced to chat by this function</param>
 		/// <param name="reattachInfo"><see cref="DualReattachInformation"/> to use, if any</param>
 		/// <param name="cancellationToken">The <see cref="CancellationToken"/> for the operation</param>
-		/// <returns>A <see cref="Task"/> representing the running operation</returns>
+		/// <returns>A <see cref="Task"/> representing the running operation.</returns>
 		protected async Task LaunchImplNoLock(bool startMonitor, bool announce, DualReattachInformation reattachInfo, CancellationToken cancellationToken)
 		{
 			Logger.LogTrace("Begin LaunchImplNoLock");
@@ -356,12 +356,8 @@ namespace Tgstation.Server.Host.Components.Watchdog
 				await chatTask.ConfigureAwait(false);
 
 				Logger.LogInformation("Launched servers successfully");
-				Running = true;
-
 				if (startMonitor)
-				{
 					StartMonitor();
-				}
 			}
 			catch (Exception e)
 			{
@@ -506,16 +502,15 @@ namespace Tgstation.Server.Host.Components.Watchdog
 			for (var retryAttempts = 1; ; ++retryAttempts)
 			{
 				Exception launchException = null;
+				bool launchSuccess = false;
 				using (await SemaphoreSlimContext.Lock(Semaphore, cancellationToken).ConfigureAwait(false))
 					try
 					{
 						// use LaunchImplNoLock without announcements or restarting the monitor
 						await LaunchImplNoLock(false, false, null, cancellationToken).ConfigureAwait(false);
-						if (Running)
-						{
-							Logger.LogDebug("Relaunch successful, resetting monitor state...");
-							return new MonitorState();
-						}
+						Logger.LogDebug("Relaunch successful, resetting monitor state...");
+						Running = true;
+						return new MonitorState();
 					}
 					catch (OperationCanceledException)
 					{
@@ -527,8 +522,9 @@ namespace Tgstation.Server.Host.Components.Watchdog
 					}
 
 				await chatTask.ConfigureAwait(false);
-				if (!Running)
+				if (launchSuccess)
 				{
+					Running = false;
 					if (launchException == null)
 						Logger.LogWarning("Failed to automatically restart the watchdog! Attempt: {0}", retryAttempts);
 					else
@@ -559,6 +555,8 @@ namespace Tgstation.Server.Host.Components.Watchdog
 		private async Task MonitorLifetimes(CancellationToken cancellationToken)
 		{
 			Logger.LogTrace("Entered MonitorLifetimes");
+			Running = true;
+
 			using var _ = cancellationToken.Register(() => Logger.LogTrace("Monitor cancellationToken triggered"));
 
 			// this function is responsible for calling HandlerMonitorWakeup when necessary and manitaining the MonitorState
@@ -709,6 +707,8 @@ namespace Tgstation.Server.Host.Components.Watchdog
 				}
 
 			DisposeAndNullControllers();
+
+			Running = false;
 
 			Logger.LogTrace("Monitor exiting...");
 		}

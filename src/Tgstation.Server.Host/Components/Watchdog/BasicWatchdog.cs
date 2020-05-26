@@ -196,7 +196,6 @@ namespace Tgstation.Server.Host.Components.Watchdog
 		{
 			Server?.Dispose();
 			Server = null;
-			Running = false;
 			gracefulRebootRequired = false;
 		}
 
